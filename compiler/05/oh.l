@@ -5,6 +5,12 @@ line            [\n]
 ws              {delim}+
 %{
     #include "oh.tab.h"
+    #include "type.h"
+    extern int yylval;
+    extern int line_no;
+    extern A_ID *current_id;
+    char        *makeString();
+    int         checkIdentifier();
 %}
 
 %%
@@ -12,8 +18,9 @@ int             { return(TYPE_IDENTIFIER); }
 char            { return(TYPE_IDENTIFIER); }
 float           { return(TYPE_IDENTIFIER); }
 void            { return(TYPE_IDENTIFIER); }
+
 {ws}            { }
-{line}          { }
+{line}          { line_no++; }
 auto            { return(AUTO_SYM); }
 break           { return(BREAK_SYM); }
 case            { return(CASE_SYM); }
@@ -67,7 +74,36 @@ while           { return(WHILE_SYM); }
 
 {digit}+                        { return(INTEGER_CONSTANT); }
 {digit}+\.{digit}+              { return(FLOAT_CONSTANT); }
-{letter}({letter}|{digit})*      { return(IDENTIFIER); }
+{letter}({letter}|{digit})*     { return(IDENTIFIER); }
 \"([^"\n]|\\["\n])*\"           { return(STRING_LITERAL); }
 \'([^'\n]|\'\')\'               { return(CHARACTER_CONSTANT); }
 %%
+
+char *makeString(char *s) {
+    char *t;
+    t = malloc(strlen(s) + 1);
+    strcpy(t,s);
+    return(t);
+}
+
+int checkIdentifier(char *s) {
+    A_ID *id;
+    char *t;
+    id = current_id;
+    while (id) {
+        if (strcmp(id->name, s) == 0) break;
+        id = id->prev;
+    }
+    if(id==0) {
+        yylval = makeString(s);
+        return(IDENTIFIER);
+    }
+    else if (id->kind == ID_TYPE) {
+        yylval = id->type;
+        return(TYPE_IDENTIFIER);
+    }
+    else {
+        yylval = id->name;
+        return(IDENTIFIER);
+    }
+}
