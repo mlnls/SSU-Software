@@ -85,7 +85,7 @@ typedef struct s_node {
     int line;
     int value;
     struct s_type *type;
-    struct s_node *link;
+    struct s_node *llink;
     struct s_node *clink;
     struct s_node *rlink;
 } A_NODE;
